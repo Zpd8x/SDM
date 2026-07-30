@@ -1,0 +1,99 @@
+#sdm-media-overlay {
+  all: initial;
+  position: fixed;
+  z-index: 2147483647;
+  display: none;
+  align-items: stretch;
+  overflow: hidden;
+  min-height: 34px;
+  border: 1px solid #1f5fbf;
+  border-radius: 7px;
+  box-shadow: 0 5px 18px rgb(0 0 0 / 45%);
+  background: #eef5ff;
+  color: #10213a;
+  font-family: "Segoe UI", Arial, sans-serif;
+  font-size: 12px;
+  line-height: 1;
+}
+
+#sdm-media-overlay button {
+  all: initial;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  border: 0;
+  border-right: 1px solid #b9cbe4;
+  background: transparent;
+  color: #10213a;
+  font-family: "Segoe UI", Arial, sans-serif;
+  font-size: 12px;
+  cursor: pointer;
+  user-select: none;
+}
+
+#sdm-media-overlay button:hover {
+  background: #d9e9ff;
+}
+
+#sdm-media-overlay button:disabled {
+  cursor: wait;
+  opacity: 0.75;
+}
+
+#sdm-media-overlay .sdm-media-download {
+  gap: 7px;
+  min-width: 158px;
+  padding: 0 10px 0 5px;
+  font-weight: 600;
+}
+
+#sdm-media-overlay .sdm-media-logo {
+  display: inline-grid;
+  width: 27px;
+  height: 25px;
+  place-items: center;
+  border-radius: 5px;
+  background: #3d83f7;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+#sdm-media-overlay .sdm-media-label {
+  overflow: hidden;
+  max-width: 260px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#sdm-media-overlay .sdm-media-help,
+#sdm-media-overlay .sdm-media-close {
+  width: 29px;
+  padding: 0;
+  font-weight: 700;
+}
+
+#sdm-media-overlay .sdm-media-close {
+  border-right: 0;
+}
+
+#sdm-media-overlay[data-state="success"] {
+  border-color: #27895f;
+  background: #e8fff4;
+  color: #14563c;
+}
+
+#sdm-media-overlay[data-state="error"] {
+  border-color: #c14f5d;
+  background: #fff0f2;
+  color: #8b2531;
+}
+
+#sdm-media-overlay[data-state="working"],
+#sdm-media-overlay[data-state="info"] {
+  border-color: #867437;
+  background: #fff9df;
+  color: #675615;
+}

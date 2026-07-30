@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
     QFrame,
+    QGridLayout,
     QHBoxLayout,
     QHeaderView,
     QLabel,
@@ -216,30 +217,59 @@ class MainWindow(QMainWindow):
 
     def _build_interface(self) -> None:
         container = QWidget()
+        container.setObjectName("appShell")
         root_layout = QVBoxLayout(container)
-        root_layout.setContentsMargins(18, 18, 18, 12)
-        root_layout.setSpacing(12)
+        root_layout.setContentsMargins(20, 18, 20, 14)
+        root_layout.setSpacing(14)
 
         header = QFrame()
-        header.setObjectName("headerCard")
+        header.setObjectName("heroCard")
         header_layout = QHBoxLayout(header)
-        header_layout.setContentsMargins(20, 16, 20, 16)
+        header_layout.setContentsMargins(22, 18, 22, 18)
+        header_layout.setSpacing(16)
+
+        logo = QLabel("S")
+        logo.setObjectName("brandMark")
+        logo.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        logo.setFixedSize(48, 48)
+        header_layout.addWidget(logo)
 
         title_column = QVBoxLayout()
-        title = QLabel("SDM")
+        title_column.setSpacing(2)
+        title = QLabel("Smart Download Manager")
         title.setObjectName("appTitle")
         subtitle = QLabel(
-            f"Smart Download Manager  •  Final Architecture  •  Version {APP_VERSION}"
+            f"SDM {APP_VERSION}  •  Adaptive downloads, browser capture and diagnostics"
         )
         subtitle.setObjectName("appSubtitle")
         title_column.addWidget(title)
         title_column.addWidget(subtitle)
         header_layout.addLayout(title_column)
         header_layout.addStretch()
-        self.summary_label = QLabel("No downloads")
-        self.summary_label.setStyleSheet("color: #9eabc0; font-weight: 600;")
-        header_layout.addWidget(self.summary_label)
+
+        self.health_badge = QLabel("●  SYSTEM READY")
+        self.health_badge.setObjectName("healthBadge")
+        self.health_badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        header_layout.addWidget(self.health_badge)
         root_layout.addWidget(header)
+
+        metrics = QFrame()
+        metrics.setObjectName("metricsCard")
+        metrics_layout = QHBoxLayout(metrics)
+        metrics_layout.setContentsMargins(0, 0, 0, 0)
+        metrics_layout.setSpacing(0)
+        self.total_metric = self._create_metric("0", "Total downloads")
+        self.active_metric = self._create_metric("0", "Active now")
+        self.queued_metric = self._create_metric("0", "Waiting")
+        self.completed_metric = self._create_metric("0", "Completed")
+        for metric in (
+            self.total_metric,
+            self.active_metric,
+            self.queued_metric,
+            self.completed_metric,
+        ):
+            metrics_layout.addWidget(metric, 1)
+        root_layout.addWidget(metrics)
 
         actions = QFrame()
         actions.setObjectName("actionCard")
@@ -247,16 +277,16 @@ class MainWindow(QMainWindow):
         action_layout.setContentsMargins(12, 10, 12, 10)
         action_layout.setSpacing(8)
 
-        self.add_button = QPushButton("＋  Add URL")
+        self.add_button = QPushButton("＋  Add download")
         self.add_button.setObjectName("primaryButton")
         self.add_button.clicked.connect(self._add_download)
         self.start_button = QPushButton("▶  Start / Resume")
         self.start_button.clicked.connect(self._start_selected)
-        self.start_all_button = QPushButton("Start All")
+        self.start_all_button = QPushButton("Start all")
         self.start_all_button.clicked.connect(self._start_all)
         self.pause_button = QPushButton("Ⅱ  Pause")
         self.pause_button.clicked.connect(self._pause_selected)
-        self.pause_all_button = QPushButton("Pause All")
+        self.pause_all_button = QPushButton("Pause all")
         self.pause_all_button.clicked.connect(self._pause_all)
         self.cancel_button = QPushButton("■  Cancel")
         self.cancel_button.setObjectName("dangerButton")
@@ -264,34 +294,34 @@ class MainWindow(QMainWindow):
         self.delete_button = QPushButton("✕  Delete")
         self.delete_button.setObjectName("dangerButton")
         self.delete_button.clicked.connect(self._delete_selected)
-        self.delete_all_button = QPushButton("Delete All")
+        self.delete_all_button = QPushButton("Delete all")
         self.delete_all_button.setObjectName("dangerButton")
         self.delete_all_button.clicked.connect(self._delete_all)
-        self.folder_button = QPushButton("Open Folder")
+        self.folder_button = QPushButton("Open folder")
         self.folder_button.clicked.connect(self._open_selected_folder)
-        self.storage_button = QPushButton("Duplicate Manager")
+        self.storage_button = QPushButton("Duplicates")
         self.storage_button.clicked.connect(self._open_storage_manager)
-        self.media_inspector_button = QPushButton("Media Inspector")
+        self.media_inspector_button = QPushButton("Media inspector")
         self.media_inspector_button.clicked.connect(self._open_media_inspector)
-        self.system_center_button = QPushButton("System Center")
+        self.system_center_button = QPushButton("System center")
         self.system_center_button.clicked.connect(self._open_system_center)
 
         for button in (
             self.add_button,
             self.start_button,
-            self.start_all_button,
             self.pause_button,
-            self.pause_all_button,
             self.cancel_button,
             self.delete_button,
-            self.delete_all_button,
             self.folder_button,
-            self.storage_button,
-            self.media_inspector_button,
-            self.system_center_button,
         ):
             action_layout.addWidget(button)
         action_layout.addStretch()
+        for button in (
+            self.media_inspector_button,
+            self.storage_button,
+            self.system_center_button,
+        ):
+            action_layout.addWidget(button)
         root_layout.addWidget(actions)
 
         controls = QFrame()
@@ -300,24 +330,21 @@ class MainWindow(QMainWindow):
         control_layout.setContentsMargins(12, 9, 12, 9)
         control_layout.setSpacing(9)
 
-        category_label = QLabel("Category:")
-        category_label.setStyleSheet("color: #93a1b7;")
+        category_label = QLabel("View")
+        category_label.setObjectName("fieldLabel")
         self.category_filter_combo = QComboBox()
-        self.category_filter_combo.setMinimumWidth(130)
+        self.category_filter_combo.setMinimumWidth(145)
         self.category_filter_combo.addItem("All categories", "")
         for category in DOWNLOAD_CATEGORIES:
             self.category_filter_combo.addItem(category, category)
         self.category_filter_combo.currentIndexChanged.connect(
             self._category_filter_changed
         )
-        self.category_filter_combo.setToolTip(
-            "Show all downloads or only one automatically detected category."
-        )
 
-        speed_label = QLabel("Global speed:")
-        speed_label.setStyleSheet("color: #93a1b7;")
+        speed_label = QLabel("Speed limit")
+        speed_label.setObjectName("fieldLabel")
         self.speed_limit_combo = QComboBox()
-        self.speed_limit_combo.setMinimumWidth(115)
+        self.speed_limit_combo.setMinimumWidth(120)
         for label, value in SPEED_LIMITS:
             self.speed_limit_combo.addItem(label, value)
         selected_speed = self.speed_limit_combo.findData(
@@ -329,14 +356,11 @@ class MainWindow(QMainWindow):
         self.speed_limit_combo.currentIndexChanged.connect(
             self._speed_limit_changed
         )
-        self.speed_limit_combo.setToolTip(
-            "Aggregate speed shared by every active file and connection."
-        )
 
-        concurrent_label = QLabel("Concurrent:")
-        concurrent_label.setStyleSheet("color: #93a1b7;")
+        concurrent_label = QLabel("Concurrent")
+        concurrent_label.setObjectName("fieldLabel")
         self.concurrent_combo = QComboBox()
-        self.concurrent_combo.setFixedWidth(68)
+        self.concurrent_combo.setFixedWidth(72)
         for value in (1, 2, 3, 4):
             self.concurrent_combo.addItem(str(value), value)
         selected_index = self.concurrent_combo.findData(
@@ -348,41 +372,45 @@ class MainWindow(QMainWindow):
         self.concurrent_combo.currentIndexChanged.connect(
             self._max_active_changed
         )
-        self.concurrent_combo.setToolTip(
-            "Maximum number of files downloaded at the same time."
-        )
-        self.smart_rules_button = QPushButton("Smart Rules")
-        self.smart_rules_button.setToolTip(
-            "Automatically choose folders, categories, connections, and "
-            "start behavior."
-        )
+        self.smart_rules_button = QPushButton("Smart rules")
         self.smart_rules_button.clicked.connect(self._open_smart_rules)
 
         control_layout.addWidget(category_label)
         control_layout.addWidget(self.category_filter_combo)
-        control_layout.addSpacing(12)
+        control_layout.addSpacing(10)
         control_layout.addWidget(speed_label)
         control_layout.addWidget(self.speed_limit_combo)
-        control_layout.addSpacing(12)
+        control_layout.addSpacing(10)
         control_layout.addWidget(self.smart_rules_button)
         control_layout.addStretch()
         control_layout.addWidget(concurrent_label)
         control_layout.addWidget(self.concurrent_combo)
         root_layout.addWidget(controls)
 
+        table_card = QFrame()
+        table_card.setObjectName("tableCard")
+        table_layout = QVBoxLayout(table_card)
+        table_layout.setContentsMargins(0, 0, 0, 0)
+        table_layout.setSpacing(0)
+
+        table_title_bar = QFrame()
+        table_title_bar.setObjectName("tableTitleBar")
+        table_title_layout = QHBoxLayout(table_title_bar)
+        table_title_layout.setContentsMargins(16, 12, 16, 10)
+        table_title = QLabel("Download workspace")
+        table_title.setObjectName("sectionTitle")
+        self.summary_label = QLabel("No downloads")
+        self.summary_label.setObjectName("summaryText")
+        table_title_layout.addWidget(table_title)
+        table_title_layout.addStretch()
+        table_title_layout.addWidget(self.summary_label)
+        table_layout.addWidget(table_title_bar)
+
         self.table = QTableWidget(0, 10)
         self.table.setHorizontalHeaderLabels(
             [
-                "File",
-                "Category",
-                "Size",
-                "Progress",
-                "Status",
-                "Mode",
-                "Speed",
-                "ETA",
-                "SHA-256",
-                "Folder",
+                "File", "Category", "Size", "Progress", "Status",
+                "Mode", "Speed", "ETA", "SHA-256", "Folder",
             ]
         )
         self.table.setAlternatingRowColors(True)
@@ -395,7 +423,7 @@ class MainWindow(QMainWindow):
         )
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table.verticalHeader().setVisible(False)
-        self.table.verticalHeader().setDefaultSectionSize(48)
+        self.table.verticalHeader().setDefaultSectionSize(54)
         self.table.itemSelectionChanged.connect(self._update_action_states)
         self.table.itemDoubleClicked.connect(
             lambda _item: self._open_selected_folder()
@@ -407,31 +435,41 @@ class MainWindow(QMainWindow):
             self.COL_FILE, QHeaderView.ResizeMode.Stretch
         )
         for column in (
-            self.COL_CATEGORY,
-            self.COL_SIZE,
-            self.COL_STATUS,
-            self.COL_MODE,
-            self.COL_SPEED,
-            self.COL_ETA,
-            self.COL_CHECKSUM,
+            self.COL_CATEGORY, self.COL_SIZE, self.COL_STATUS, self.COL_MODE,
+            self.COL_SPEED, self.COL_ETA, self.COL_CHECKSUM,
         ):
             header_view.setSectionResizeMode(
-                column,
-                QHeaderView.ResizeMode.ResizeToContents,
+                column, QHeaderView.ResizeMode.ResizeToContents
             )
         header_view.setSectionResizeMode(
             self.COL_PROGRESS, QHeaderView.ResizeMode.Fixed
         )
-        header_view.resizeSection(self.COL_PROGRESS, 175)
+        header_view.resizeSection(self.COL_PROGRESS, 185)
         header_view.setSectionResizeMode(
             self.COL_FOLDER, QHeaderView.ResizeMode.Stretch
         )
-        root_layout.addWidget(self.table, 1)
+        table_layout.addWidget(self.table, 1)
+        root_layout.addWidget(table_card, 1)
 
         self.setCentralWidget(container)
         self.statusBar().showMessage(
-            "Ready. Add a direct HTTP or HTTPS file URL to begin."
+            "Ready — add a direct URL or capture a download from your browser."
         )
+
+    def _create_metric(self, value: str, label: str) -> QFrame:
+        card = QFrame()
+        card.setObjectName("metricItem")
+        layout = QVBoxLayout(card)
+        layout.setContentsMargins(18, 12, 18, 12)
+        layout.setSpacing(2)
+        value_label = QLabel(value)
+        value_label.setObjectName("metricValue")
+        label_widget = QLabel(label)
+        label_widget.setObjectName("metricLabel")
+        layout.addWidget(value_label)
+        layout.addWidget(label_widget)
+        card.value_label = value_label
+        return card
 
     def _open_system_center(self) -> None:
         app_root = Path(__file__).resolve().parents[2]
@@ -1520,9 +1558,31 @@ class MainWindow(QMainWindow):
         )
 
     def _update_summary(self) -> None:
-        self.summary_label.setText(
-            build_summary_text(self.repository.list_all())
+        records = self.repository.list_all()
+        self.summary_label.setText(build_summary_text(records))
+        active = sum(
+            record.status in {
+                DownloadStatus.DOWNLOADING,
+                DownloadStatus.RETRYING,
+                DownloadStatus.VERIFYING,
+            }
+            for record in records
         )
+        queued = sum(
+            record.status in {
+                DownloadStatus.QUEUED,
+                DownloadStatus.SCHEDULED,
+                DownloadStatus.PAUSED,
+            }
+            for record in records
+        )
+        completed = sum(
+            record.status == DownloadStatus.COMPLETED for record in records
+        )
+        self.total_metric.value_label.setText(str(len(records)))
+        self.active_metric.value_label.setText(str(active))
+        self.queued_metric.value_label.setText(str(queued))
+        self.completed_metric.value_label.setText(str(completed))
 
     def _rebuild_row_index(self) -> None:
         self.row_for_id.clear()

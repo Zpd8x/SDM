@@ -91,6 +91,19 @@
       </div>
     </section>
 
+
+    <section class="gallery-section section-shell" id="screenshots">
+      <div class="container">
+        <div class="section-heading reveal"><span class="kicker">PRODUCT SHOWCASE</span><h2>See SDM in action.</h2><p>Explore the download workspace, browser capture workflow, media inspection and system diagnostics.</p></div>
+        <div class="shot-grid">
+          <button class="shot-card reveal" data-gallery="assets/img/download-center.svg" data-caption="Download Center — adaptive queue and live progress"><img src="assets/img/download-center.svg" alt="SDM Download Center interface" loading="lazy"><span><b>Download Center</b><small>Queue, speed and progress</small></span></button>
+          <button class="shot-card reveal" data-delay="70" data-gallery="assets/img/browser-capture.svg" data-caption="Browser Capture Engine 2.0 — detect media directly in the browser"><img src="assets/img/browser-capture.svg" alt="SDM Browser Capture interface" loading="lazy"><span><b>Browser Capture 2.0</b><small>Instant media detection</small></span></button>
+          <button class="shot-card reveal" data-delay="120" data-gallery="assets/img/media-inspector.svg" data-caption="Media Inspector — choose formats, audio and playlists"><img src="assets/img/media-inspector.svg" alt="SDM Media Inspector interface" loading="lazy"><span><b>Media Inspector</b><small>Formats before download</small></span></button>
+          <button class="shot-card reveal" data-delay="170" data-gallery="assets/img/system-center.png" data-caption="System Center — diagnostics, bundled tools and plugins"><img src="assets/img/system-center.png" alt="SDM System Center interface" loading="lazy"><span><b>System Center</b><small>Diagnostics and plugins</small></span></button>
+        </div>
+      </div>
+    </section>
+
     <section class="system-preview section-shell">
       <div class="container preview-grid">
         <div class="preview-copy reveal"><span class="kicker">SYSTEM CENTER</span><h2>Know exactly what is ready.</h2><p>Built-in diagnostics verify the application, database, browser integration, native host and bundled tools in one place.</p><ul><li>Clear component health</li><li>Exportable diagnostic reports</li><li>Plugin visibility and control</li></ul><a class="text-link" href="docs.html">Learn about diagnostics →</a></div>
@@ -107,6 +120,13 @@
     <div class="container footer-main"><div class="footer-brand"><a class="brand" href="index.html"><img src="assets/img/logo.svg" alt="" width="40" height="40"><span><strong>SDM</strong><small>Smart Download Manager</small></span></a><p>Download smarter. Faster. Cleaner.</p></div><div class="footer-links"><div><strong>Product</strong><a href="features.html">Features</a><a href="download.html">Download</a><a href="docs.html">Documentation</a></div><div><strong>Project</strong><a data-repo href="#">GitHub</a><a data-releases href="#">Releases</a><a data-issues href="#">Issues</a></div><div><strong>Release</strong><span>Version 2.0.0</span><span>Windows x64</span><span>Dark theme</span></div></div></div>
     <div class="container footer-bottom"><span>© <span data-year></span> SDM Project</span><span>Released under the project license.</span></div>
   </footer>
+
+  <div class="gallery-modal" role="dialog" aria-modal="true" aria-label="Screenshot viewer" hidden>
+    <button class="gallery-close" type="button" aria-label="Close screenshot">×</button>
+    <button class="gallery-nav gallery-prev" type="button" aria-label="Previous screenshot">‹</button>
+    <figure><img alt=""><figcaption></figcaption></figure>
+    <button class="gallery-nav gallery-next" type="button" aria-label="Next screenshot">›</button>
+  </div>
   <script src="assets/js/site.js"></script>
 </body>
 </html>

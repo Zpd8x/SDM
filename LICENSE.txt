@@ -1,0 +1,6 @@
+SDM - Smart Download Manager
+Copyright (c) 2026 ZPD8X. All rights reserved.
+
+This software is provided for personal use. Redistribution, modification, or commercial use requires the copyright holder's permission.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.

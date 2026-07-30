@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SDM Integration</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main>
+      <header>
+        <div class="brand">SDM</div>
+        <div>
+          <h1>Smart Download Manager</h1>
+          <p id="connectionStatus">Checking Native Host…</p>
+        </div>
+      </header>
+
+      <label for="url">File or public media page URL</label>
+      <textarea
+        id="url"
+        rows="3"
+        placeholder="https://example.com/file.zip"
+      ></textarea>
+
+      <label for="filename">File name <span>(optional)</span></label>
+      <input id="filename" type="text" placeholder="file.zip">
+
+      <div class="grid">
+        <div>
+          <label for="connections">Connections</label>
+          <select id="connections">
+            <option value="1">1 connection</option>
+            <option value="2">2 connections</option>
+            <option value="4" selected>4 connections</option>
+            <option value="8">8 connections</option>
+            <option value="16">16 connections</option>
+          </select>
+        </div>
+        <label class="check start-check">
+          <input id="startImmediately" type="checkbox" checked>
+          <span>Prefer Start Download</span>
+        </label>
+      </div>
+
+      <button id="send" type="button">Send to SDM</button>
+      <p id="result" role="status"></p>
+
+      <section class="settings">
+        <label class="check">
+          <input id="showMediaPanel" type="checkbox" checked>
+          <span>Show “Download this video/audio” panel</span>
+        </label>
+        <label class="check">
+          <input id="interceptDownloads" type="checkbox">
+          <span>Automatically capture browser downloads</span>
+        </label>
+        <label class="check">
+          <input id="useBrowserSession" type="checkbox">
+          <span>Use browser session for private file downloads</span>
+        </label>
+        <p class="privacy-note">
+          Optional: sends only cookies matching the selected download site.
+          SDM encrypts them with Windows and removes them after completion.
+        </p>
+        <p>
+          You can also right-click any link, image, audio, or video and choose
+          “Download with SDM”. The media panel supports direct HTTP/HTTPS
+          files and public media pages. DRM-protected media is not supported.
+        </p>
+      </section>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>

@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QHeaderView,
     QLabel,
+    QLineEdit,
     QMainWindow,
     QMessageBox,
     QProgressBar,
@@ -98,6 +99,16 @@ CHECKSUM_COLORS = {
     "Mismatch": "#ff707d",
     "Error": "#ff707d",
 }
+
+STATUS_FILTERS = (
+    ("All statuses", ""),
+    ("Active", "active"),
+    ("Waiting", "waiting"),
+    ("Completed", "completed"),
+    ("Failed", "failed"),
+    ("Paused", "paused"),
+)
+
 
 SPEED_LIMITS = (
     ("Unlimited", 0),
@@ -341,6 +352,25 @@ class MainWindow(QMainWindow):
             self._category_filter_changed
         )
 
+        status_label = QLabel("Status")
+        status_label.setObjectName("fieldLabel")
+        self.status_filter_combo = QComboBox()
+        self.status_filter_combo.setMinimumWidth(125)
+        for label, value in STATUS_FILTERS:
+            self.status_filter_combo.addItem(label, value)
+        self.status_filter_combo.currentIndexChanged.connect(
+            self._workspace_filter_changed
+        )
+
+        search_label = QLabel("Search")
+        search_label.setObjectName("fieldLabel")
+        self.search_input = QLineEdit()
+        self.search_input.setObjectName("workspaceSearch")
+        self.search_input.setPlaceholderText("File name, URL or folder…")
+        self.search_input.setClearButtonEnabled(True)
+        self.search_input.setMinimumWidth(230)
+        self.search_input.textChanged.connect(self._workspace_filter_changed)
+
         speed_label = QLabel("Speed limit")
         speed_label.setObjectName("fieldLabel")
         self.speed_limit_combo = QComboBox()
@@ -375,9 +405,15 @@ class MainWindow(QMainWindow):
         self.smart_rules_button = QPushButton("Smart rules")
         self.smart_rules_button.clicked.connect(self._open_smart_rules)
 
+        control_layout.addWidget(search_label)
+        control_layout.addWidget(self.search_input, 1)
+        control_layout.addSpacing(8)
         control_layout.addWidget(category_label)
         control_layout.addWidget(self.category_filter_combo)
-        control_layout.addSpacing(10)
+        control_layout.addSpacing(8)
+        control_layout.addWidget(status_label)
+        control_layout.addWidget(self.status_filter_combo)
+        control_layout.addSpacing(8)
         control_layout.addWidget(speed_label)
         control_layout.addWidget(self.speed_limit_combo)
         control_layout.addSpacing(10)
@@ -1583,6 +1619,12 @@ class MainWindow(QMainWindow):
         self.active_metric.value_label.setText(str(active))
         self.queued_metric.value_label.setText(str(queued))
         self.completed_metric.value_label.setText(str(completed))
+        if (
+            self.search_input.text().strip()
+            or self.category_filter_combo.currentData()
+            or self.status_filter_combo.currentData()
+        ):
+            self._apply_category_filter()
 
     def _rebuild_row_index(self) -> None:
         self.row_for_id.clear()
@@ -1604,21 +1646,78 @@ class MainWindow(QMainWindow):
                 return
 
     def _category_filter_changed(self) -> None:
+        self._workspace_filter_changed()
+
+    def _workspace_filter_changed(self) -> None:
         self._apply_category_filter()
         self._update_action_states()
+
+    @staticmethod
+    def _matches_status_filter(status: DownloadStatus, filter_key: str) -> bool:
+        if not filter_key:
+            return True
+        if filter_key == "active":
+            return status in {
+                DownloadStatus.DOWNLOADING,
+                DownloadStatus.RETRYING,
+                DownloadStatus.VERIFYING,
+            }
+        if filter_key == "waiting":
+            return status in {
+                DownloadStatus.QUEUED,
+                DownloadStatus.SCHEDULED,
+            }
+        if filter_key == "completed":
+            return status == DownloadStatus.COMPLETED
+        if filter_key == "failed":
+            return status in {DownloadStatus.FAILED, DownloadStatus.CANCELED}
+        if filter_key == "paused":
+            return status == DownloadStatus.PAUSED
+        return True
 
     def _apply_category_filter(self) -> None:
         selected_category = str(
             self.category_filter_combo.currentData() or ""
         )
+        selected_status = str(self.status_filter_combo.currentData() or "")
+        search_text = self.search_input.text().strip().casefold()
+        records = {record.id: record for record in self.repository.list_all()}
         selected_id = self._selected_record_id()
+        visible_count = 0
         for row in range(self.table.rowCount()):
+            file_item = self.table.item(row, self.COL_FILE)
             category_item = self.table.item(row, self.COL_CATEGORY)
-            category = category_item.text() if category_item else ""
-            self.table.setRowHidden(
-                row,
-                bool(selected_category and category != selected_category),
+            record_id = str(
+                file_item.data(Qt.ItemDataRole.UserRole) if file_item else ""
             )
+            record = records.get(record_id)
+            category = category_item.text() if category_item else ""
+            category_match = not selected_category or category == selected_category
+            status_match = bool(
+                record and self._matches_status_filter(record.status, selected_status)
+            )
+            searchable = " ".join(
+                part for part in (
+                    record.filename if record else "",
+                    record.url if record else "",
+                    record.folder if record else "",
+                    record.category if record else "",
+                ) if part
+            ).casefold()
+            search_match = not search_text or search_text in searchable
+            hidden = not (category_match and status_match and search_match)
+            self.table.setRowHidden(row, hidden)
+            if not hidden:
+                visible_count += 1
+
+        total_count = self.table.rowCount()
+        if search_text or selected_category or selected_status:
+            self.summary_label.setText(
+                f"Showing {visible_count} of {total_count} downloads"
+            )
+        else:
+            self._update_summary()
+
         if selected_id:
             selected_row = self.row_for_id.get(selected_id)
             if selected_row is not None and self.table.isRowHidden(selected_row):

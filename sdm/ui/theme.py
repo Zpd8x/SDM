@@ -114,3 +114,6 @@ QScrollBar::handle:vertical { background: #24573a; min-height: 28px; border-radi
 QScrollBar::handle:vertical:hover { background: #347a50; }
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }
 """
+
+# Phase 2 workspace refinements are intentionally appended so every dialog keeps
+# the same base palette while the main window gains a more compact search field.

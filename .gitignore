@@ -1,21 +1,36 @@
+# Python caches and tests
 __pycache__/
 *.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+tests/
+
+# Temporary and runtime files
+*.tmp
+*.temp
+*.log
+*.sdm.part
+~$*
+temp/
+Temp/
+logs/
+
+# Runtime data
+*.db
+*.db-shm
+*.db-wal
+
+# Build output
 .build-venv/
 .venv/
 venv/
 build/
 dist/
 release/
-.pytest_cache/
-.coverage
-htmlcov/
-*.db
-*.db-shm
-*.db-wal
-logs/
-temp/
+
+# Editors and Windows
 .vscode/
 .idea/
 Thumbs.db
 Desktop.ini
-~$*

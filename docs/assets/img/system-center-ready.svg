@@ -1,8 +1,41 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 760" role="img" aria-labelledby="t d">
-<title id="t">SDM System Center ready state</title><desc id="d">Diagnostics table showing SDM and bundled tools with OK status.</desc>
-<defs><linearGradient id="g" x1="0" x2="1"><stop stop-color="#101923"/><stop offset="1" stop-color="#0a1118"/></linearGradient><filter id="s"><feDropShadow dx="0" dy="20" stdDeviation="24" flood-opacity=".35"/></filter></defs>
-<rect width="1280" height="760" fill="#080d12"/><g filter="url(#s)"><rect x="55" y="46" width="1170" height="666" rx="22" fill="url(#g)" stroke="#27384a"/><rect x="55" y="46" width="1170" height="64" rx="22" fill="#20262d"/><rect x="55" y="88" width="1170" height="22" fill="#20262d"/><text x="88" y="86" fill="#f2f7fb" font-family="Segoe UI,Arial" font-size="25" font-weight="700">SDM System Center</text><circle cx="1168" cy="78" r="8" fill="#8fa1b3"/><circle cx="1194" cy="78" r="8" fill="#8fa1b3"/>
-<text x="82" y="157" fill="#f7fbff" font-family="Segoe UI,Arial" font-size="27" font-weight="700">System Center — Diagnostics &amp; Plugins</text><rect x="82" y="181" width="142" height="50" rx="8" fill="#17283e" stroke="#315073"/><text x="108" y="214" fill="#f6fbff" font-family="Segoe UI,Arial" font-size="20">Diagnostics</text><text x="258" y="214" fill="#9ab5d8" font-family="Segoe UI,Arial" font-size="20">Plugins</text>
-<rect x="82" y="252" width="1116" height="360" rx="11" fill="#101822" stroke="#2b3b50"/><rect x="82" y="252" width="1116" height="58" rx="11" fill="#1b2736"/><text x="128" y="289" fill="#a9c5eb" font-family="Segoe UI,Arial" font-size="19">Component</text><text x="455" y="289" fill="#a9c5eb" font-family="Segoe UI,Arial" font-size="19">Status</text><text x="688" y="289" fill="#a9c5eb" font-family="Segoe UI,Arial" font-size="19">Details</text>
-<g font-family="Segoe UI,Arial" font-size="18"><g fill="#eef6ff"><text x="128" y="348">SDM version</text><text x="688" y="348">2.0.0 Final</text><text x="128" y="397">Python</text><text x="688" y="397">3.14.6</text><text x="128" y="446">Database</text><text x="688" y="446">quick_check=ok</text><text x="128" y="495">yt-dlp</text><text x="688" y="495">Bundled in Tools</text><text x="128" y="544">ffmpeg / ffprobe / ffplay</text><text x="688" y="544">Bundled in Tools</text><text x="128" y="593">Browser integration</text><text x="688" y="593">Manifest V3 · Native host ready</text></g><g fill="#70f5a8" font-weight="700"><text x="455" y="348">OK</text><text x="455" y="397">OK</text><text x="455" y="446">OK</text><text x="455" y="495">OK</text><text x="455" y="544">OK</text><text x="455" y="593">OK</text></g></g>
-<rect x="82" y="633" width="132" height="50" rx="9" fill="#1c2b3e" stroke="#385373"/><text x="112" y="665" fill="#f2f8ff" font-family="Segoe UI,Arial" font-size="18">Refresh</text><rect x="230" y="633" width="172" height="50" rx="9" fill="#1c2b3e" stroke="#385373"/><text x="255" y="665" fill="#f2f8ff" font-family="Segoe UI,Arial" font-size="18">Export report</text><rect x="1070" y="633" width="128" height="50" rx="9" fill="#1c2b3e" stroke="#385373"/><text x="1110" y="665" fill="#f2f8ff" font-family="Segoe UI,Arial" font-size="18">Close</text></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 760" role="img" aria-labelledby="title desc">
+<title id="title">SDM System Center ready state</title><desc id="desc">Green dark interface showing SDM diagnostics and bundled tools as ready.</desc>
+<defs>
+ <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#07110c"/><stop offset="1" stop-color="#0a1811"/></linearGradient>
+ <linearGradient id="panel" x1="0" x2="1"><stop stop-color="#0d1d15"/><stop offset="1" stop-color="#0a1610"/></linearGradient>
+ <linearGradient id="header" x1="0" x2="1"><stop stop-color="#10251a"/><stop offset="1" stop-color="#0e1d16"/></linearGradient>
+ <filter id="shadow"><feDropShadow dx="0" dy="24" stdDeviation="28" flood-color="#000" flood-opacity=".42"/></filter>
+</defs>
+<rect width="1280" height="760" fill="#050907"/>
+<circle cx="1125" cy="75" r="260" fill="#0a8f51" opacity=".08"/>
+<circle cx="120" cy="690" r="220" fill="#1c6d49" opacity=".06"/>
+<g filter="url(#shadow)">
+ <rect x="55" y="46" width="1170" height="666" rx="26" fill="url(#bg)" stroke="#27533b"/>
+ <rect x="55" y="46" width="1170" height="72" rx="26" fill="url(#header)"/>
+ <rect x="55" y="91" width="1170" height="27" fill="url(#header)"/>
+ <circle cx="88" cy="82" r="9" fill="#41e58c"/><text x="110" y="91" fill="#effff5" font-family="Segoe UI,Arial" font-size="25" font-weight="700">SDM System Center</text>
+ <circle cx="1168" cy="82" r="7" fill="#527563"/><circle cx="1194" cy="82" r="7" fill="#527563"/>
+ <text x="82" y="164" fill="#f2fff7" font-family="Segoe UI,Arial" font-size="27" font-weight="700">System Center — Diagnostics &amp; Plugins</text>
+ <rect x="82" y="188" width="146" height="48" rx="10" fill="#153324" stroke="#2f6b4b"/><text x="107" y="219" fill="#eafff2" font-family="Segoe UI,Arial" font-size="19">Diagnostics</text>
+ <text x="264" y="219" fill="#8eb39f" font-family="Segoe UI,Arial" font-size="19">Plugins</text>
+ <rect x="82" y="258" width="1116" height="352" rx="15" fill="url(#panel)" stroke="#224b35"/>
+ <rect x="82" y="258" width="1116" height="58" rx="15" fill="#13271d"/>
+ <text x="128" y="295" fill="#a6c8b6" font-family="Segoe UI,Arial" font-size="18">Component</text><text x="455" y="295" fill="#a6c8b6" font-family="Segoe UI,Arial" font-size="18">Status</text><text x="688" y="295" fill="#a6c8b6" font-family="Segoe UI,Arial" font-size="18">Details</text>
+ <g stroke="#183928" stroke-width="1"><path d="M82 365h1116M82 414h1116M82 463h1116M82 512h1116M82 561h1116"/></g>
+ <g font-family="Segoe UI,Arial" font-size="18" fill="#eafff2">
+  <text x="128" y="348">SDM version</text><text x="688" y="348">2.0.0 Final</text>
+  <text x="128" y="397">Python</text><text x="688" y="397">3.14.6</text>
+  <text x="128" y="446">Database</text><text x="688" y="446">quick_check=ok</text>
+  <text x="128" y="495">yt-dlp</text><text x="688" y="495">Bundled in Tools</text>
+  <text x="128" y="544">ffmpeg / ffprobe / ffplay</text><text x="688" y="544">Bundled in Tools</text>
+  <text x="128" y="593">Browser integration</text><text x="688" y="593">Manifest V3 · Native host ready</text>
+ </g>
+ <g font-family="Segoe UI,Arial" font-size="18" font-weight="700" fill="#70f5a8">
+  <text x="455" y="348">OK</text><text x="455" y="397">OK</text><text x="455" y="446">OK</text><text x="455" y="495">OK</text><text x="455" y="544">OK</text><text x="455" y="593">OK</text>
+ </g>
+ <g font-family="Segoe UI,Arial" font-size="18">
+  <rect x="82" y="633" width="132" height="50" rx="11" fill="#133022" stroke="#2b6648"/><text x="111" y="665" fill="#effff5">Refresh</text>
+  <rect x="230" y="633" width="172" height="50" rx="11" fill="#133022" stroke="#2b6648"/><text x="254" y="665" fill="#effff5">Export report</text>
+  <rect x="1070" y="633" width="128" height="50" rx="11" fill="#133022" stroke="#2b6648"/><text x="1110" y="665" fill="#effff5">Close</text>
+ </g>
+</g></svg>

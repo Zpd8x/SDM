@@ -1,5 +1,5 @@
 #define MyAppName "SDM - Smart Download Manager"
-#define MyAppVersion "2.0.0"
+#define MyAppVersion "3.2.0"
 #define MyAppPublisher "ZPD8X"
 #define MyAppExeName "SDM.exe"
 #define SourceRoot "..\\.."
@@ -18,7 +18,7 @@ ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 PrivilegesRequired=admin
 OutputDir={#SourceRoot}\\release
-OutputBaseFilename=SDM_v2.0.0_Setup_x64
+OutputBaseFilename=SDM_v3.2.0_Setup_x64
 Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern
@@ -37,7 +37,6 @@ Source: "{#SourceRoot}\\browser_extension\\*"; DestDir: "{app}\\browser_extensio
 Source: "{#SourceRoot}\\README.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#SourceRoot}\\CHANGELOG.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#SourceRoot}\\BROWSER_SETUP_AR.md"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#SourceRoot}\\Tools\\*"; DestDir: "{app}\\Tools"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Dirs]
 Name: "{localappdata}\\SDM"

@@ -43,16 +43,20 @@
   overlay.setAttribute("role", "group");
   overlay.setAttribute("aria-label", "Smart Download Manager media panel");
   overlay.innerHTML = `
-    <button class="sdm-media-download" type="button">
+    <button class="sdm-media-download" type="button" title="Download now with SDM">
       <span class="sdm-media-logo">SDM</span>
       <span class="sdm-media-label">Download this video</span>
     </button>
+    <button class="sdm-media-later" type="button" title="Add to SDM queue">Queue</button>
+    <span class="sdm-media-count" title="Detected media candidates">0</span>
     <button class="sdm-media-help" type="button" title="Supported media">?</button>
     <button class="sdm-media-close" type="button" title="Hide for this media">×</button>
   `;
 
   const downloadButton = overlay.querySelector(".sdm-media-download");
   const label = overlay.querySelector(".sdm-media-label");
+  const laterButton = overlay.querySelector(".sdm-media-later");
+  const countBadge = overlay.querySelector(".sdm-media-count");
   const helpButton = overlay.querySelector(".sdm-media-help");
   const closeButton = overlay.querySelector(".sdm-media-close");
 
@@ -76,6 +80,31 @@
     window.setInterval(refreshAudioDetection, 1800);
     window.setInterval(refreshNetworkDetection, 1400);
   }
+
+  chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+    if (message?.type !== "sdm-scan-page") {
+      return false;
+    }
+    collectDeclaredMedia();
+    collectStructuredMedia();
+    collectPerformanceCandidates();
+    void collectNetworkCandidates().then(() => {
+      const candidates = rankedMediaCandidates("");
+      updateCandidateCount(candidates.length);
+      sendResponse({
+        ok: true,
+        count: candidates.length,
+        audio: candidates.filter((item) => item.kind === "audio").length,
+        video: candidates.filter((item) => item.kind === "video").length,
+        candidates: candidates.map((item) => ({
+          ...item,
+          page_url: location.href,
+          page_title: document.title
+        }))
+      });
+    });
+    return true;
+  });
 
   chrome.storage.onChanged.addListener((changes, areaName) => {
     if (areaName !== "local" || !changes.showMediaPanel) {
@@ -230,7 +259,15 @@
     }, 2800);
   }
 
-  downloadButton.addEventListener("click", async (event) => {
+  downloadButton.addEventListener("click", (event) => {
+    void submitCapture(event, true);
+  });
+
+  laterButton.addEventListener("click", (event) => {
+    void submitCapture(event, false);
+  });
+
+  async function submitCapture(event, startImmediately) {
     event.preventDefault();
     event.stopPropagation();
     if (!activeMedia && !pageFallback) {
@@ -242,15 +279,17 @@
     collectPerformanceCandidates();
     await collectNetworkCandidates();
     const captureCandidates = rankedMediaCandidates(activeKind);
+    updateCandidateCount(captureCandidates.length);
     const smartDirect = captureCandidates.find(
       (candidate) => candidate.direct
     );
-    const mediaUrl =
+    const resolvedUrl =
       resolveMediaUrl(activeMedia) ||
       pageMediaUrl ||
       smartDirect?.url ||
       "";
-    const targetUrl = mediaUrl || location.href;
+    const mediaUrl = isDownloadableMediaUrl(resolvedUrl) ? resolvedUrl : "";
+    const targetUrl = mediaUrl || canonicalPlatformUrl(location.href);
     const mediaKind = mediaUrl ? "direct" : activeKind;
     const selectedCandidate =
       captureCandidates.find((candidate) => candidate.url === mediaUrl) ||
@@ -258,8 +297,11 @@
       null;
 
     downloadButton.disabled = true;
+    laterButton.disabled = true;
     setLabel(
-      mediaUrl ? "Sending to SDM…" : "Analyzing with SDM…",
+      startImmediately
+        ? (mediaUrl ? "Sending to SDM…" : "Analyzing with SDM…")
+        : "Adding to queue…",
       "working"
     );
     try {
@@ -274,7 +316,7 @@
           total_bytes: Number(selectedCandidate?.total_bytes) || 0,
           mime_type: String(selectedCandidate?.mime_type || ""),
           connections: Number(settings.connections) || 4,
-          start_immediately: true,
+          start_immediately: startImmediately,
           media_kind: mediaKind,
           page_url: location.href,
           capture_candidates: captureCandidates,
@@ -288,13 +330,48 @@
         );
         return;
       }
-      showTemporaryMessage("Added to SDM ✓", "success");
+      showTemporaryMessage(
+        startImmediately ? "Added to SDM ✓" : "Added to queue ✓",
+        "success"
+      );
     } catch (error) {
       showTemporaryMessage(error.message || "Could not contact SDM", "error");
     } finally {
       downloadButton.disabled = false;
+      laterButton.disabled = false;
     }
-  });
+  }
+
+  function isDownloadableMediaUrl(value) {
+    if (!value) return false;
+    try {
+      const url = new URL(value, location.href);
+      const host = url.hostname.toLowerCase();
+      if (host.endsWith("youtube.com") || host === "youtu.be") return false;
+      const path = url.pathname.toLowerCase();
+      return [...AUDIO_EXTENSIONS, ...VIDEO_EXTENSIONS, ...MANIFEST_EXTENSIONS]
+        .some((extension) => path.endsWith(extension)) ||
+        url.protocol === "blob:" ||
+        /(?:mime|type)=(?:audio|video)/i.test(url.search);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function canonicalPlatformUrl(value) {
+    try {
+      const url = new URL(value);
+      if (url.hostname.endsWith("youtube.com")) {
+        const embed = url.pathname.match(/^\/embed\/([^/?#]+)/);
+        if (embed) return `https://www.youtube.com/watch?v=${embed[1]}`;
+        const shorts = url.pathname.match(/^\/shorts\/([^/?#]+)/);
+        if (shorts) return `https://www.youtube.com/watch?v=${shorts[1]}`;
+      }
+      return url.href;
+    } catch (_) {
+      return value;
+    }
+  }
 
   helpButton.addEventListener("click", (event) => {
     event.preventDefault();
@@ -576,6 +653,19 @@
     positionOverlay();
   }
 
+
+  function updateCandidateCount(count = mediaCandidates.size) {
+    const safeCount = Math.max(0, Math.min(99, Number(count) || 0));
+    countBadge.textContent = safeCount > 9 ? "9+" : String(safeCount);
+    countBadge.style.display = safeCount ? "inline-flex" : "none";
+    if (window.top === window.self) {
+      chrome.runtime.sendMessage({
+        type: "sdm-media-count",
+        count: safeCount
+      }, () => void chrome.runtime.lastError);
+    }
+  }
+
   function declaredAudioUrl() {
     const selectors = [
       'meta[property="og:audio"]',
@@ -784,6 +874,7 @@
     while (mediaCandidates.size > 96) {
       mediaCandidates.delete(mediaCandidates.keys().next().value);
     }
+    updateCandidateCount(mediaCandidates.size);
     return mediaCandidates.get(url);
   }
 

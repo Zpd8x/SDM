@@ -1,0 +1,48 @@
+{
+  "version": "3.2.0",
+  "ready": true,
+  "checks": [
+    {
+      "name": "Required release files",
+      "status": "PASS",
+      "detail": "7 files present",
+      "required": true
+    },
+    {
+      "name": "Version sync",
+      "status": "PASS",
+      "detail": "3.2.0",
+      "required": true
+    },
+    {
+      "name": "Python compilation",
+      "status": "PASS",
+      "detail": "main.py, sdm, browser_host",
+      "required": true
+    },
+    {
+      "name": "Optional tool: ffmpeg",
+      "status": "PASS",
+      "detail": "/usr/bin/ffmpeg",
+      "required": false
+    },
+    {
+      "name": "Optional tool: ffprobe",
+      "status": "PASS",
+      "detail": "/usr/bin/ffprobe",
+      "required": false
+    },
+    {
+      "name": "Optional tool: ffplay",
+      "status": "PASS",
+      "detail": "/usr/bin/ffplay",
+      "required": false
+    },
+    {
+      "name": "Optional tool: yt-dlp",
+      "status": "WARN",
+      "detail": "Not found in PATH or bundled Tools directory",
+      "required": false
+    }
+  ]
+}

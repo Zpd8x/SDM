@@ -130,6 +130,38 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 });
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message?.type === "sdm-media-count") {
+    const count = Math.max(0, Math.min(99, Number(message.count) || 0));
+    if (sender.tab?.id != null) {
+      chrome.action.setBadgeText({
+        tabId: sender.tab.id,
+        text: count ? (count > 9 ? "9+" : String(count)) : ""
+      });
+      chrome.action.setBadgeBackgroundColor({
+        tabId: sender.tab.id,
+        color: "#2f80ed"
+      });
+    }
+    sendResponse({ ok: true });
+    return false;
+  }
+  if (message?.type === "sdm-scan-active-tab") {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      const tabId = tabs[0]?.id;
+      if (tabId == null) {
+        sendResponse({ ok: false, error: "No active browser tab." });
+        return;
+      }
+      chrome.tabs.sendMessage(tabId, { type: "sdm-scan-page" }, (response) => {
+        if (chrome.runtime.lastError) {
+          sendResponse({ ok: false, error: chrome.runtime.lastError.message });
+          return;
+        }
+        sendResponse(response || { ok: true, count: 0, audio: 0, video: 0 });
+      });
+    });
+    return true;
+  }
   if (message?.type === "sdm-get-network-media-candidates") {
     sendResponse({
       ok: true,
@@ -144,6 +176,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
   if (message?.type === "sdm-ping") {
     sendNative({ action: "ping" })
+      .then(sendResponse)
+      .catch((error) => sendResponse({ ok: false, error: error.message }));
+    return true;
+  }
+  if (message?.type === "sdm-batch-download") {
+    sendBatchDownload(message.payload || {})
+      .then(showResultBadge)
       .then(sendResponse)
       .catch((error) => sendResponse({ ok: false, error: error.message }));
     return true;
@@ -753,6 +792,33 @@ async function sendDownload(payload) {
     message.session_auth = sessionAuth;
   }
   return sendNative(message);
+}
+
+async function sendBatchDownload(payload) {
+  const items = Array.isArray(payload.items) ? payload.items.slice(0, 48) : [];
+  const prepared = [];
+  for (const item of items) {
+    if (!isHttpUrl(item?.url)) continue;
+    const sessionAuth = await buildSessionAuth(item);
+    const candidate = {
+      url: String(item.url).slice(0, 8192),
+      source_url: String(item.source_url || item.url).slice(0, 8192),
+      page_url: String(item.page_url || "").slice(0, 8192),
+      filename: basename(item.filename).slice(0, 260),
+      mime_type: String(item.mime_type || "").slice(0, 255),
+      total_bytes: normalizeTotalBytes(item.total_bytes),
+      connections: Number(item.connections || payload.connections) || 4,
+      start_immediately: item.start_immediately !== false,
+      media_kind: String(item.media_kind || item.kind || "auto"),
+      requires_ffmpeg: Boolean(item.requires_ffmpeg),
+      quality: String(item.quality || "").slice(0, 80),
+      codec: String(item.codec || "").slice(0, 80)
+    };
+    if (sessionAuth) candidate.session_auth = sessionAuth;
+    prepared.push(candidate);
+  }
+  if (!prepared.length) throw new Error("No valid media candidates were selected.");
+  return sendNative({ action: "batch_download", items: prepared });
 }
 
 async function buildSessionAuth(payload) {

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import time
 from dataclasses import dataclass
 from email.message import Message
 from pathlib import Path
@@ -33,6 +34,9 @@ class RemoteMetadata:
     filename: str = ""
     total_bytes: int = 0
     mime_type: str = ""
+    accept_ranges: bool = False
+    status_code: int = 0
+    latency_ms: float | None = None
 
 
 def is_generic_filename(value: object) -> bool:
@@ -69,16 +73,21 @@ def inspect_download_url(
                 **extra_headers,
             },
         )
+        started_at = time.monotonic()
         try:
             with urlopen(request, timeout=timeout) as response:
                 current = metadata_from_headers(
                     response.headers,
                     final_url=response.geturl(),
+                    status_code=int(response.getcode() or 0),
+                    latency_ms=(time.monotonic() - started_at) * 1000.0,
                 )
         except HTTPError as error:
             current = metadata_from_headers(
                 error.headers,
                 final_url=error.geturl() or url,
+                status_code=int(error.code or 0),
+                latency_ms=(time.monotonic() - started_at) * 1000.0,
             )
             if error.code not in {405, 416} and not (
                 current.filename or current.total_bytes
@@ -97,6 +106,8 @@ def metadata_from_headers(
     headers: Mapping[str, object],
     *,
     final_url: str = "",
+    status_code: int = 0,
+    latency_ms: float | None = None,
 ) -> RemoteMetadata:
     disposition = _header(headers, "Content-Disposition")
     filename = parse_content_disposition(disposition)
@@ -109,11 +120,16 @@ def metadata_from_headers(
         else content_length
     )
     content_type = _header(headers, "Content-Type").split(";", 1)[0].strip()
+    accept_ranges_header = _header(headers, "Accept-Ranges").casefold()
+    accept_ranges = accept_ranges_header == "bytes" or bool(content_range) or int(status_code or 0) == 206
     return RemoteMetadata(
         final_url=str(final_url or ""),
         filename=filename,
         total_bytes=total_bytes,
         mime_type=content_type,
+        accept_ranges=accept_ranges,
+        status_code=max(0, int(status_code or 0)),
+        latency_ms=latency_ms,
     )
 
 
@@ -171,6 +187,9 @@ def merge_metadata(
         filename=new.filename or original.filename,
         total_bytes=new.total_bytes or original.total_bytes,
         mime_type=new.mime_type or original.mime_type,
+        accept_ranges=new.accept_ranges or original.accept_ranges,
+        status_code=new.status_code or original.status_code,
+        latency_ms=new.latency_ms if new.latency_ms is not None else original.latency_ms,
     )
 
 

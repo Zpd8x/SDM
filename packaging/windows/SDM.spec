@@ -13,11 +13,11 @@ hiddenimports = [
 datas = [
     (str(project_root / "browser_extension"), "browser_extension"),
     (str(project_root / "plugins"), "plugins"),
+    (str(project_root / "Tools"), "Tools"),
     (str(project_root / "VERSION"), "."),
     (str(project_root / "README.md"), "."),
     (str(project_root / "CHANGELOG.md"), "."),
     (str(project_root / "BROWSER_SETUP_AR.md"), "."),
-    (str(project_root / "Tools"), "Tools"),
 ]
 
 icon_path = project_root / "browser_extension" / "icons" / "icon.ico"

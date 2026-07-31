@@ -1,26 +1,45 @@
-# SDM v2.0.0 Final
+# SDM 3.2.0 — Smart Download Manager
 
-SDM is a Windows Smart Download Manager with segmented downloads, reliable resume, browser capture, media inspection, adaptive connections, recovery, duplicate intelligence and smart rules.
+SDM is a Windows desktop download manager focused on fast, reliable and understandable downloads. It combines segmented transfers, adaptive connections, recovery, media analysis, duplicate detection, browser capture and a compact dark-green workspace.
 
-## Final v2 features
+## Highlights
 
-- **System Center**: database integrity, tool versions, extension/native-host status and exportable diagnostics.
-- **Plugin API v1**: local plugins with manifest validation, enable/disable persistence and crash isolation.
-- **Browser Capture 2.0**: persistent Native Messaging, batch queue, context actions and secure session metadata.
-- **Media Inspector**: yt-dlp format analysis, audio/video selection, subtitles, HDR, playlists and live detection.
-- **Self-healing downloads**: network classification, backoff, resume validation, mirrors and event history.
-- **Storage intelligence**: SHA-256 fingerprints, duplicate groups and safe hard-link optimization.
+- Adaptive segmented downloads with pause, resume, cancel and recovery.
+- Smart link analysis, strategy selection and download health scoring.
+- Media Inspector with General, Connections, Chunks, Headers and More views.
+- Activity Center for download, browser, error and system events.
+- Browser integration for Chrome and Edge through Native Messaging.
+- Duplicate intelligence, SHA-256 verification, smart rules and sessions.
+- Performance event buffering for smoother updates during parallel downloads.
 
-## Start
+## Run from source
 
-Run `START_SDM.bat`.
+1. Install Python 3.10 or newer.
+2. Run `START_SDM.bat`.
+3. The launcher creates `.venv` once and installs only missing requirements.
 
-For browser integration, run `INSTALL_BROWSER_INTEGRATION.bat`, then load the `browser_extension` folder as an unpacked extension.
+After the first successful setup, SDM can start offline when its requirements are already installed.
 
-## Upgrade
+## Build the Windows release
 
-Use a new program folder. SDM continues to use the existing user database under `%LOCALAPPDATA%\\SDM` and migrates compatible fields automatically.
+Run:
 
-## Validation
+```bat
+packaging\windows\build_release.bat
+```
 
-190 Python tests passed for this release.
+The Windows build computer needs Python 3, Inno Setup 6 and Internet access for build dependencies. The script creates the Setup EXE, Portable ZIP, browser-extension ZIP and SHA-256 checksums in `release`.
+
+## Browser integration
+
+Run `INSTALL_BROWSER_INTEGRATION.bat`, then load the `browser_extension` directory as an unpacked extension when developing from source. Installed builds can register the native host through the installer.
+
+## User data
+
+SDM stores its database and persistent settings under `%LOCALAPPDATA%\SDM`. Installing or extracting a newer program build does not require deleting this folder.
+
+## Release
+
+Version: `3.2.0`  
+Channel: Stable  
+Platform: Windows x64

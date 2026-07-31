@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "SDM Integration",
-  "version": "2.0.0",
-  "description": "Browser Integration & Capture Engine 2.0 with batch queue, persistent native messaging, media inspection, and download interception.",
+  "version": "3.2.0",
+  "description": "SDM Universal Media Capture with network detection, HLS/DASH discovery, smart deduplication, floating panel, batch downloads, site profiles, browser interception, and native messaging.",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0CvolbMag5iOkUK9/ImgvQ2udn4/N9EYOMdlOkt7OQJilinUcVwc8tkZDxiBIbzXu5a7ACriNCcJV7uDp51H9fvNe0mD4UHXV/5Ip3/2Z8tsyLD7OTHCT/G1Hlhi4RB2qz7Hovdbebae0zhik8Q7FCyZ+jxAAsKXIl6hri2x9sJxwUEB+BTxIMwLEufAZPzH50lf3Z6Kg67KqRE4GmQdezmfvsbnNLGp1c/4IV1LtKU8MetKgfnmlgOSvc/YN4S4qMbEAmWQSVeqJl3c5pmZKnk+C07679BQv/3qDzVuhfXfeDZJxd7P4Ky2GL837dHoZrDkrP+TjR7QzWmIoMJ7SQIDAQAB",
   "permissions": [
     "activeTab",
@@ -52,5 +52,5 @@
     },
     "default_popup": "popup.html"
   },
-  "version_name": "2.0.0 Final"
+  "version_name": "3.2.0 Universal Media Capture"
 }

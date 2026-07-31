@@ -26,9 +26,19 @@ def _configure_bundled_tools() -> Path:
     if tools.is_dir():
         current = os.environ.get("PATH", "")
         parts = [part for part in current.split(os.pathsep) if part]
-        if str(tools) not in parts:
-            os.environ["PATH"] = str(tools) + os.pathsep + current
-        os.environ.setdefault("FFMPEG_BINARY", str(tools / "ffmpeg.exe"))
+        tool_paths = [tools]
+        try:
+            tool_paths.extend(
+                path for path in tools.rglob("*")
+                if path.is_dir() and any((path / exe).is_file() for exe in ("ffmpeg.exe", "ffprobe.exe", "ffplay.exe", "yt-dlp.exe"))
+            )
+        except OSError:
+            pass
+        new_parts = [str(path) for path in tool_paths if str(path) not in parts]
+        if new_parts:
+            os.environ["PATH"] = os.pathsep.join(new_parts + parts)
+        ffmpeg = next((path for path in tools.rglob("ffmpeg.exe") if path.is_file()), tools / "ffmpeg.exe")
+        os.environ.setdefault("FFMPEG_BINARY", str(ffmpeg))
     return root
 
 
@@ -60,7 +70,19 @@ def _run_browser_host_action(action: str) -> int:
 
 
 def main() -> int:
-    _configure_bundled_tools()
+    root = _configure_bundled_tools()
+    if "--release-check" in sys.argv:
+        from sdm.release_readiness import (
+            format_release_report,
+            release_check_exit_code,
+            run_release_checks,
+            write_release_report,
+        )
+        checks = run_release_checks(root)
+        print(format_release_report(checks))
+        report = write_release_report(root, checks)
+        print(f"Report: {report}")
+        return release_check_exit_code(checks)
     if "--install-browser-host" in sys.argv:
         return _run_browser_host_action("install")
     if "--uninstall-browser-host" in sys.argv:

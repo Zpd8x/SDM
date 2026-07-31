@@ -58,6 +58,9 @@ class DownloadRecord:
     content_fingerprint_status: str = "Pending"
     duplicate_of_id: str = ""
     media_format: str = ""
+    session_name: str = "Today"
+    priority: str = "Normal"
+    tags: str = ""
 
     @property
     def final_path(self) -> Path:

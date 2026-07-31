@@ -4,7 +4,7 @@ cd /d "%~dp0\..\.."
 set "ROOT=%CD%"
 set "VENV=%ROOT%\.build-venv"
 set "PYTHON=%VENV%\Scripts\python.exe"
-set "SETUP_EXE=%ROOT%\release\SDM_v2.0.0_Setup_x64.exe"
+set "SETUP_EXE=%ROOT%\release\SDM_v3.2.0_Setup_x64.exe"
 set "ISCC="
 
 call :find_inno_setup
@@ -24,11 +24,11 @@ if not exist "%PYTHON%" (
 "%PYTHON%" -m pip install --upgrade pip || call :fatal "pip upgrade failed." "Check your internet connection and Python installation."
 "%PYTHON%" -m pip install -r requirements.txt pyinstaller || call :fatal "Dependency installation failed." "Review the pip output above."
 
-powershell -NoProfile -ExecutionPolicy Bypass -File packaging\windows\download_tools.ps1 || call :fatal "Bundled tools preparation failed." "SDM could not download or verify yt-dlp and FFmpeg tools. Check your internet connection and run the build again."
-
 if exist "build\windows" rmdir /s /q "build\windows"
 if not exist "release" mkdir "release"
 if exist "%SETUP_EXE%" del /f /q "%SETUP_EXE%"
+
+powershell -NoProfile -ExecutionPolicy Bypass -File packaging\windows\download_tools.ps1 || call :fatal "Bundled tools download failed." "yt-dlp or FFmpeg tools could not be prepared."
 
 "%PYTHON%" -m unittest discover -s tests -v || call :fatal "Automated tests failed." "The release was stopped before packaging. Review the failed tests above."
 "%PYTHON%" -m PyInstaller --noconfirm --clean --distpath build\windows --workpath build\pyinstaller packaging\windows\SDM.spec || call :fatal "SDM executable build failed." "PyInstaller could not build SDM.exe."
@@ -49,11 +49,11 @@ echo ============================================================
 echo [SUCCESS] COMPLETE WINDOWS RELEASE CREATED
 echo ============================================================
 echo Setup    : %SETUP_EXE%
-echo Portable : %ROOT%\release\SDM_v2.0.0_Portable_x64.zip
-echo Extension: %ROOT%\release\SDM_Browser_Extension_v2.0.0.zip
+echo Portable : %ROOT%\release\SDM_v3.2.0_Portable_x64.zip
+echo Extension: %ROOT%\release\SDM_Browser_Extension_v3.2.0.zip
 echo Hashes   : %ROOT%\release\SHA256SUMS.txt
 echo ============================================================
-powershell -NoProfile -ExecutionPolicy Bypass -Command "Add-Type -AssemblyName PresentationFramework; [System.Windows.MessageBox]::Show('SDM v2.0.0 Windows release was created successfully.','SDM Build Success','OK','Information')" >nul 2>&1
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Add-Type -AssemblyName PresentationFramework; [System.Windows.MessageBox]::Show('SDM v3.2.0 Windows release was created successfully.','SDM Build Success','OK','Information')" >nul 2>&1
 exit /b 0
 
 :find_inno_setup

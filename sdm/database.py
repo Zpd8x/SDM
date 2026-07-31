@@ -63,7 +63,10 @@ CREATE TABLE IF NOT EXISTS downloads (
     content_sha256 TEXT NOT NULL DEFAULT '',
     content_fingerprint_status TEXT NOT NULL DEFAULT 'Pending',
     duplicate_of_id TEXT NOT NULL DEFAULT '',
-    media_format TEXT NOT NULL DEFAULT ''
+    media_format TEXT NOT NULL DEFAULT '',
+    session_name TEXT NOT NULL DEFAULT 'Today',
+    priority TEXT NOT NULL DEFAULT 'Normal',
+    tags TEXT NOT NULL DEFAULT ''
 );
 CREATE INDEX IF NOT EXISTS idx_downloads_created_at
     ON downloads(created_at DESC);
@@ -131,6 +134,9 @@ UPDATABLE_FIELDS = {
     "content_fingerprint_status",
     "duplicate_of_id",
     "media_format",
+    "session_name",
+    "priority",
+    "tags",
 }
 
 
@@ -152,6 +158,9 @@ class DownloadRepository:
         connection.row_factory = sqlite3.Row
         connection.execute("PRAGMA foreign_keys = ON")
         connection.execute("PRAGMA busy_timeout = 15000")
+        connection.execute("PRAGMA synchronous = NORMAL")
+        connection.execute("PRAGMA temp_store = MEMORY")
+        connection.execute("PRAGMA cache_size = -8192")
         try:
             yield connection
             connection.commit()
@@ -279,6 +288,18 @@ class DownloadRepository:
                 "ALTER TABLE downloads "
                 "ADD COLUMN media_format TEXT NOT NULL DEFAULT ''"
             ),
+            "session_name": (
+                "ALTER TABLE downloads "
+                "ADD COLUMN session_name TEXT NOT NULL DEFAULT 'Today'"
+            ),
+            "priority": (
+                "ALTER TABLE downloads "
+                "ADD COLUMN priority TEXT NOT NULL DEFAULT 'Normal'"
+            ),
+            "tags": (
+                "ALTER TABLE downloads "
+                "ADD COLUMN tags TEXT NOT NULL DEFAULT ''"
+            ),
         }
         for column, statement in migrations.items():
             if column not in existing_columns:
@@ -357,6 +378,9 @@ class DownloadRepository:
         rule_id: str = "",
         rule_reason: str = "",
         media_format: str = "",
+        session_name: str = "Today",
+        priority: str = "Normal",
+        tags: str = "",
     ) -> DownloadRecord:
         timestamp = utc_now()
         normalized_schedule = normalize_scheduled_at(scheduled_at)
@@ -408,7 +432,10 @@ class DownloadRepository:
             ),
             rule_id=str(rule_id).strip()[:128],
             rule_reason=str(rule_reason).strip()[:1000],
-            media_format=str(media_format).strip()[:128],
+            media_format=str(media_format).strip()[:2000],
+            session_name=normalize_session_name(session_name),
+            priority=normalize_priority(priority),
+            tags=str(tags).strip()[:1000],
         )
         record.adaptive_connections = record.connections
         with self._write_lock, self._connect() as connection:
@@ -424,8 +451,8 @@ class DownloadRepository:
                     mime_type, referer, source_url, site_adapter,
                     adapter_status, resolved_at, identity_key, rule_id,
                     rule_reason, content_sha256, content_fingerprint_status,
-                    duplicate_of_id, media_format
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    duplicate_of_id, media_format, session_name, priority, tags
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     record.id,
@@ -467,6 +494,9 @@ class DownloadRepository:
                     record.content_fingerprint_status,
                     record.duplicate_of_id,
                     record.media_format,
+                    record.session_name,
+                    record.priority,
+                    record.tags,
                 ),
             )
         return record
@@ -780,9 +810,22 @@ class DownloadRepository:
             ),
             duplicate_of_id=str(row["duplicate_of_id"] or ""),
             media_format=str(row["media_format"] or ""),
+            session_name=normalize_session_name(row["session_name"]),
+            priority=normalize_priority(row["priority"]),
+            tags=str(row["tags"] or ""),
         )
 
 
 def normalize_media_kind(value: object) -> str:
     candidate = str(value or "direct").strip().casefold()
     return candidate if candidate in {"direct", "video", "audio", "auto"} else "direct"
+
+
+def normalize_session_name(value: object) -> str:
+    candidate = str(value or "Today").strip()
+    return candidate[:80] or "Today"
+
+
+def normalize_priority(value: object) -> str:
+    candidate = str(value or "Normal").strip().title()
+    return candidate if candidate in {"Highest", "High", "Normal", "Low", "Background"} else "Normal"

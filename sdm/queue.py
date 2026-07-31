@@ -51,6 +51,16 @@ class DownloadQueue:
             item for item in self._pending if item != record_id
         )
 
+
+    def reorder_pending(self, ordered_ids) -> None:
+        """Reorder only IDs already waiting in the in-memory queue."""
+        requested = [str(item) for item in ordered_ids]
+        existing = list(self._pending)
+        existing_set = set(existing)
+        ordered = [item for item in requested if item in existing_set]
+        ordered.extend(item for item in existing if item not in set(ordered))
+        self._pending = deque(ordered)
+
     def pause_all(self) -> None:
         self._active.clear()
         self._pending.clear()

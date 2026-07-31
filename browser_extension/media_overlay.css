@@ -97,3 +97,38 @@
   background: #fff9df;
   color: #675615;
 }
+
+#sdm-media-overlay .sdm-media-later {
+  min-width: 48px;
+  padding: 0 9px;
+  border-left: 1px solid rgb(31 95 191 / 35%);
+  color: #24476f;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+#sdm-media-overlay .sdm-media-later:hover {
+  background: rgb(61 131 247 / 12%);
+}
+
+#sdm-media-overlay .sdm-media-count {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  min-width: 18px;
+  height: 18px;
+  margin: 0 4px;
+  padding: 0 4px;
+  border-radius: 9px;
+  background: #d7e7ff;
+  color: #245b9f;
+  font-family: "Segoe UI", Arial, sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+#sdm-media-overlay button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}

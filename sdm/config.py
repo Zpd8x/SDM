@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 APP_NAME = "SDM - Smart Download Manager"
-APP_VERSION = "2.0.0"
+APP_VERSION = "3.2.0"
 DEFAULT_CONNECTIONS_PER_DOWNLOAD = 4
 DEFAULT_MAX_ACTIVE_DOWNLOADS = 2
 USER_AGENT = f"SDM/{APP_VERSION} (Windows; Smart Download Manager)"

@@ -181,3 +181,26 @@ button:disabled {
   font-size: 11px;
   line-height: 1.45;
 }
+
+.action-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+button.secondary {
+  background: #26364d;
+  color: #dbe9ff;
+}
+
+button.secondary:hover {
+  background: #314867;
+}
+
+.media-summary {
+  margin: 8px 0 2px;
+  color: #8fa7c6;
+  font-size: 11px;
+}
+
+.candidate-panel{margin-top:10px;border:1px solid #244f3b;border-radius:10px;background:#0d1f18;padding:9px}.candidate-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px}.candidate-head button{width:auto;padding:7px 10px}.candidate-list{display:grid;gap:6px;max-height:230px;overflow:auto}.candidate-item{display:grid;grid-template-columns:auto 1fr;gap:8px;padding:8px;border:1px solid #1d3d2f;border-radius:8px;background:#10271d}.candidate-item:hover{border-color:#2d7d58}.candidate-main{min-width:0}.candidate-title{font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.candidate-meta{font-size:11px;opacity:.72;margin-top:2px}.candidate-url{font-size:10px;opacity:.55;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}.kind-pill{display:inline-block;padding:1px 5px;border-radius:999px;background:#1a4a34;color:#8ee2b6;text-transform:uppercase;font-size:9px;letter-spacing:.4px}.stream-pill{background:#493b16;color:#f2cf72}

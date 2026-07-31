@@ -43,7 +43,15 @@
         </label>
       </div>
 
-      <button id="send" type="button">Send to SDM</button>
+      <div class="action-row">
+        <button id="send" type="button">Send to SDM</button>
+        <button id="scanPage" class="secondary" type="button">Scan page</button>
+      </div>
+      <p id="mediaSummary" class="media-summary">Detected media: not scanned</p>
+      <section id="candidatePanel" class="candidate-panel" hidden>
+        <div class="candidate-head"><strong>Detected media</strong><button id="downloadSelected" class="secondary" type="button">Download selected</button></div>
+        <div id="candidateList" class="candidate-list"></div>
+      </section>
       <p id="result" role="status"></p>
 
       <section class="settings">

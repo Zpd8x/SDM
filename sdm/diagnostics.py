@@ -51,17 +51,79 @@ class DiagnosticsService:
         except (sqlite3.Error, OSError) as exc:
             return DiagnosticItem("Database", "ERROR", str(exc))
 
+    def _tool_roots(self) -> list[Path]:
+        roots: list[Path] = []
+
+        def add(path: Path) -> None:
+            try:
+                resolved = path.expanduser().resolve()
+            except OSError:
+                resolved = path.expanduser()
+            if resolved not in roots:
+                roots.append(resolved)
+
+        add(self.root)
+        add(Path.cwd())
+        add(Path(sys.executable).resolve().parent)
+        add(Path(__file__).resolve().parents[1])
+        if getattr(sys, "_MEIPASS", None):
+            add(Path(sys._MEIPASS))
+
+        for root in list(roots):
+            for parent in root.parents:
+                add(parent)
+                if len(roots) >= 20:
+                    break
+        return roots
+
     def _check_tool(self, name: str) -> DiagnosticItem:
-        candidate = shutil.which(name)
-        if not candidate:
-            local = self.root / "Tools" / (name + (".exe" if sys.platform == "win32" else ""))
-            candidate = str(local) if local.exists() else ""
-        if not candidate:
-            return DiagnosticItem(name, "MISSING", "Not found in PATH or Tools")
+        executable = name + (".exe" if sys.platform == "win32" else "")
+        candidates: list[Path] = []
+
+        for lookup in (name, executable):
+            from_path = shutil.which(lookup)
+            if from_path:
+                candidates.append(Path(from_path))
+
+        searched: list[Path] = []
+        for root in self._tool_roots():
+            for folder_name in ("Tools", "tools"):
+                tools_root = root / folder_name
+                if tools_root in searched:
+                    continue
+                searched.append(tools_root)
+                candidates.extend([
+                    tools_root / executable,
+                    tools_root / name / executable,
+                    tools_root / "bin" / executable,
+                    tools_root / "ffmpeg" / "bin" / executable,
+                ])
+                if tools_root.is_dir():
+                    try:
+                        candidates.extend(tools_root.rglob(executable))
+                    except OSError:
+                        pass
+
+        candidate = next((path for path in candidates if path.is_file()), None)
+        if candidate is None:
+            locations = "; ".join(str(path) for path in searched[:4])
+            return DiagnosticItem(
+                name,
+                "MISSING",
+                f"Executable not found. Checked PATH and: {locations}",
+            )
         try:
-            completed = subprocess.run([candidate, "--version"], capture_output=True, text=True, timeout=5, check=False)
-            first = (completed.stdout or completed.stderr).splitlines()[0][:180]
-            return DiagnosticItem(name, "OK" if completed.returncode == 0 else "WARNING", first)
+            completed = subprocess.run(
+                [str(candidate), "-version" if name.startswith("ff") else "--version"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+                check=False,
+            )
+            lines = (completed.stdout or completed.stderr).splitlines()
+            first = (lines[0] if lines else candidate.name)[:140]
+            status = "OK" if completed.returncode == 0 else "WARNING"
+            return DiagnosticItem(name, status, f"{first} | {candidate}")
         except (OSError, subprocess.SubprocessError) as exc:
             return DiagnosticItem(name, "ERROR", str(exc))
 

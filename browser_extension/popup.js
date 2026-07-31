@@ -7,9 +7,15 @@ const elements = {
   showMediaPanel: document.querySelector("#showMediaPanel"),
   useBrowserSession: document.querySelector("#useBrowserSession"),
   send: document.querySelector("#send"),
+  scanPage: document.querySelector("#scanPage"),
+  mediaSummary: document.querySelector("#mediaSummary"),
   result: document.querySelector("#result"),
-  connectionStatus: document.querySelector("#connectionStatus")
+  connectionStatus: document.querySelector("#connectionStatus"),
+  candidatePanel: document.querySelector("#candidatePanel"),
+  candidateList: document.querySelector("#candidateList"),
+  downloadSelected: document.querySelector("#downloadSelected")
 };
+let scannedCandidates = [];
 
 void initialize();
 
@@ -106,6 +112,29 @@ elements.send.addEventListener("click", async () => {
     showResult(error.message, false);
   } finally {
     elements.send.disabled = false;
+  }
+});
+
+
+elements.scanPage.addEventListener("click", async () => {
+  elements.scanPage.disabled = true;
+  elements.mediaSummary.textContent = "Scanning visible page media…";
+  try {
+    const response = await sendRuntimeMessage({ type: "sdm-scan-active-tab" });
+    if (!response?.ok) {
+      elements.mediaSummary.textContent = response?.error || "Page scan failed.";
+      return;
+    }
+    scannedCandidates = deduplicateCandidates(response.candidates || []);
+    elements.mediaSummary.textContent =
+      `Detected media: ${scannedCandidates.length} ` +
+      `(${scannedCandidates.filter((item) => item.kind === "video").length} video, ` +
+      `${scannedCandidates.filter((item) => item.kind === "audio").length} audio)`;
+    renderCandidates();
+  } catch (error) {
+    elements.mediaSummary.textContent = error.message || "Page scan failed.";
+  } finally {
+    elements.scanPage.disabled = false;
   }
 });
 
@@ -215,4 +244,98 @@ function mediaKindForPage(value) {
   } catch (_error) {
     return "direct";
   }
+}
+
+
+elements.downloadSelected.addEventListener("click", async () => {
+  const selected = Array.from(elements.candidateList.querySelectorAll("input[type=checkbox]:checked"))
+    .map((input) => scannedCandidates[Number(input.dataset.index)])
+    .filter(Boolean);
+  if (!selected.length) {
+    showResult("Select at least one media item.", false);
+    return;
+  }
+  elements.downloadSelected.disabled = true;
+  showResult(`Sending ${selected.length} media item(s) to SDM…`, null);
+  try {
+    const response = await sendRuntimeMessage({
+      type: "sdm-batch-download",
+      payload: {
+        connections: Number(elements.connections.value),
+        items: selected.map((item) => ({
+          ...item,
+          source_url: item.url,
+          start_immediately: elements.startImmediately.checked,
+          connections: Number(elements.connections.value),
+          media_kind: item.kind === "stream" ? "video" : item.kind
+        }))
+      }
+    });
+    showResult(response?.ok ? `${selected.length} item(s) added to SDM.` : response?.error || "Batch request failed.", Boolean(response?.ok));
+  } catch (error) {
+    showResult(error.message, false);
+  } finally {
+    elements.downloadSelected.disabled = false;
+  }
+});
+
+function deduplicateCandidates(items) {
+  const best = new Map();
+  for (const raw of items) {
+    if (!isHttpUrl(raw?.url)) continue;
+    const url = canonicalMediaUrl(raw.url);
+    const key = `${url}\n${raw.kind || "other"}\n${raw.quality || ""}\n${raw.codec || ""}`;
+    const candidate = { ...raw, url };
+    const previous = best.get(key);
+    if (!previous || Number(candidate.score || 0) > Number(previous.score || 0)) best.set(key, candidate);
+  }
+  return Array.from(best.values()).sort((a,b) => Number(b.score||0)-Number(a.score||0)).slice(0,48);
+}
+
+function canonicalMediaUrl(value) {
+  try {
+    const url = new URL(value);
+    ["utm_source","utm_medium","utm_campaign","utm_term","utm_content","fbclid","gclid"].forEach((key) => url.searchParams.delete(key));
+    url.hash = "";
+    return url.href;
+  } catch (_error) { return String(value || ""); }
+}
+
+function renderCandidates() {
+  elements.candidateList.textContent = "";
+  elements.candidatePanel.hidden = !scannedCandidates.length;
+  scannedCandidates.forEach((item, index) => {
+    const row = document.createElement("label");
+    row.className = "candidate-item";
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.checked = index < 8;
+    input.dataset.index = String(index);
+    const main = document.createElement("div");
+    main.className = "candidate-main";
+    const title = document.createElement("div");
+    title.className = "candidate-title";
+    title.textContent = item.filename || filenameFromUrl(item.url) || "Detected media";
+    const meta = document.createElement("div");
+    meta.className = "candidate-meta";
+    const kind = document.createElement("span");
+    kind.className = `kind-pill ${item.kind === "stream" ? "stream-pill" : ""}`;
+    kind.textContent = item.kind || "media";
+    meta.append(kind, document.createTextNode(` • ${item.source || "page"}${item.total_bytes ? ` • ${formatBytes(item.total_bytes)}` : ""}${item.mime_type ? ` • ${item.mime_type}` : ""}`));
+    const url = document.createElement("div");
+    url.className = "candidate-url";
+    url.textContent = item.url;
+    url.title = item.url;
+    main.append(title, meta, url);
+    row.append(input, main);
+    elements.candidateList.append(row);
+  });
+}
+
+function filenameFromUrl(value) {
+  try { return decodeURIComponent(new URL(value).pathname.split("/").pop() || ""); } catch (_error) { return ""; }
+}
+function formatBytes(value) {
+  const bytes = Number(value || 0); if (!bytes) return "";
+  const units=["B","KB","MB","GB"]; let i=0,n=bytes; while(n>=1024&&i<units.length-1){n/=1024;i+=1;} return `${n.toFixed(i?1:0)} ${units[i]}`;
 }

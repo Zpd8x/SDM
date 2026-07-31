@@ -185,3 +185,75 @@ def _float(value: Any) -> float:
         return max(0.0, float(value or 0))
     except (TypeError, ValueError):
         return 0.0
+
+MEDIA_OPTIONS_PREFIX = "sdm-media:"
+
+
+def encode_media_options(
+    *,
+    selector: str = "",
+    container: str = "auto",
+    audio_format: str = "original",
+    thumbnail: bool = True,
+    metadata: bool = True,
+    chapters: bool = True,
+    subtitle_mode: str = "none",
+    subtitle_language: str = "all",
+    embed_subtitles: bool = True,
+) -> str:
+    """Store Smart Media Center choices in the existing media_format field.
+
+    The prefix keeps old database records compatible: plain values remain valid
+    yt-dlp selectors, while new values carry a compact JSON settings document.
+    """
+    import json
+
+    payload = {
+        "f": str(selector or ""),
+        "c": str(container or "auto"),
+        "a": str(audio_format or "original"),
+        "t": bool(thumbnail),
+        "m": bool(metadata),
+        "h": bool(chapters),
+        "s": str(subtitle_mode or "none"),
+        "l": str(subtitle_language or "all"),
+        "e": bool(embed_subtitles),
+    }
+    return MEDIA_OPTIONS_PREFIX + json.dumps(payload, separators=(",", ":"), ensure_ascii=True)
+
+
+def decode_media_options(value: str) -> dict[str, object]:
+    import json
+
+    raw = str(value or "")
+    defaults: dict[str, object] = {
+        "selector": raw,
+        "container": "auto",
+        "audio_format": "original",
+        "thumbnail": False,
+        "metadata": False,
+        "chapters": False,
+        "subtitle_mode": "none",
+        "subtitle_language": "all",
+        "embed_subtitles": False,
+    }
+    if not raw.startswith(MEDIA_OPTIONS_PREFIX):
+        return defaults
+    try:
+        data = json.loads(raw[len(MEDIA_OPTIONS_PREFIX):])
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return defaults
+    if not isinstance(data, dict):
+        return defaults
+    defaults.update({
+        "selector": str(data.get("f") or ""),
+        "container": str(data.get("c") or "auto"),
+        "audio_format": str(data.get("a") or "original"),
+        "thumbnail": bool(data.get("t", True)),
+        "metadata": bool(data.get("m", True)),
+        "chapters": bool(data.get("h", True)),
+        "subtitle_mode": str(data.get("s") or "none"),
+        "subtitle_language": str(data.get("l") or "all"),
+        "embed_subtitles": bool(data.get("e", True)),
+    })
+    return defaults

@@ -14,6 +14,7 @@ from sdm.engine import (
     StatusCallback,
 )
 from sdm.models import DownloadRecord, DownloadStatus
+from sdm.media_inspector import decode_media_options
 
 
 ModeCallback = Callable[[str, int], None]
@@ -84,8 +85,10 @@ class PlatformMediaEngine:
         http_headers = {"User-Agent": USER_AGENT}
         if record.referer:
             http_headers["Referer"] = record.referer
+        media_options = decode_media_options(record.media_format)
+        selector = str(media_options.get("selector") or "")
         options: dict[str, Any] = {
-            "format": record.media_format or self._format_for(record.media_kind),
+            "format": selector or self._format_for(record.media_kind),
             "outtmpl": {"default": str(output_template)},
             "noplaylist": True,
             "continuedl": True,
@@ -100,6 +103,7 @@ class PlatformMediaEngine:
             "progress_hooks": [progress_hook],
             "http_headers": http_headers,
         }
+        self._apply_media_options(options, media_options, record.media_kind)
 
         status_callback(
             DownloadStatus.DOWNLOADING,
@@ -138,6 +142,53 @@ class PlatformMediaEngine:
             downloaded_bytes=total,
             total_bytes=total,
         )
+
+
+    @staticmethod
+    def _apply_media_options(
+        options: dict[str, Any],
+        media_options: dict[str, object],
+        media_kind: str,
+    ) -> None:
+        """Translate Smart Media Center choices into yt-dlp options."""
+        postprocessors: list[dict[str, Any]] = []
+        container = str(media_options.get("container") or "auto").lower()
+        if container in {"mp4", "mkv", "webm"}:
+            options["merge_output_format"] = container
+
+        audio_format = str(media_options.get("audio_format") or "original").lower()
+        if media_kind == "audio" and audio_format in {"mp3", "m4a", "opus", "wav", "flac"}:
+            postprocessors.append({
+                "key": "FFmpegExtractAudio",
+                "preferredcodec": audio_format,
+                "preferredquality": "0" if audio_format in {"wav", "flac"} else "192",
+            })
+
+        if bool(media_options.get("thumbnail")):
+            options["writethumbnail"] = True
+            postprocessors.append({"key": "EmbedThumbnail"})
+        keep_metadata = bool(media_options.get("metadata"))
+        keep_chapters = bool(media_options.get("chapters"))
+        if keep_metadata or keep_chapters:
+            postprocessors.append({
+                "key": "FFmpegMetadata",
+                "add_metadata": keep_metadata,
+                "add_chapters": keep_chapters,
+            })
+
+        subtitle_mode = str(media_options.get("subtitle_mode") or "none").lower()
+        if subtitle_mode != "none":
+            options["writesubtitles"] = subtitle_mode in {"manual", "all"}
+            options["writeautomaticsub"] = subtitle_mode in {"automatic", "all"}
+            language = str(media_options.get("subtitle_language") or "all")
+            if language and language != "all":
+                options["subtitleslangs"] = [language]
+            options["subtitlesformat"] = "best"
+            if bool(media_options.get("embed_subtitles")):
+                postprocessors.append({"key": "FFmpegEmbedSubtitle"})
+
+        if postprocessors:
+            options["postprocessors"] = postprocessors
 
     @staticmethod
     def _format_for(media_kind: str) -> str:

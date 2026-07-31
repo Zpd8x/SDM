@@ -1,15 +1,62 @@
 name: Quality
+
 on:
   push:
+    branches: [main]
   pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
+    name: Python and browser checks
     runs-on: windows-latest
+    timeout-minutes: 20
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: python -m pip install -r requirements.txt
-      - run: python -m unittest discover -s tests -v
-      - run: python -m compileall -q main.py sdm browser_host
+          cache: pip
+
+      - name: Install dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Compile Python sources
+        shell: pwsh
+        run: python -m compileall -q main.py sdm browser_host tests
+
+      - name: Run unit tests
+        shell: pwsh
+        run: |
+          if (Test-Path "tests") {
+            python -m unittest discover -s tests -t . -p "test_*.py" -v
+          } else {
+            Write-Host "No tests directory found; skipping unit tests."
+          }
+
+      - name: Validate browser extension manifest
+        shell: pwsh
+        run: |
+          python -c "import json, pathlib; p=pathlib.Path('browser_extension/manifest.json'); json.loads(p.read_text(encoding='utf-8')); print('manifest.json: OK')"
+
+      - name: Check browser extension JavaScript syntax
+        shell: pwsh
+        run: |
+          Get-ChildItem browser_extension -Filter *.js -Recurse | ForEach-Object {
+            node --check $_.FullName
+          }
